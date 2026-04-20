@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memoriza Colossenses 1 - NAA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .verse-card {
+            transition: all 0.3s ease;
+        }
+
+        .initials-font {
+            letter-spacing: 0.1em;
+            font-weight: 600;
+        }
+
+        .tab-active {
+            border-bottom: 3px solid white;
+            opacity: 1;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 10px; }
+
+        @keyframes errorFadeInOut {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; text-shadow: 0 0 8px rgba(239, 68, 68, 0.4); }
+        }
+        
+        .error-char {
+            color: #ef4444; 
+            font-weight: 700;
+            animation: errorFadeInOut 1.5s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+
+    <header class="bg-indigo-700 text-white shadow-xl sticky top-0 z-50">
+        <div class="max-w-4xl mx-auto px-4 py-4">
+            <div class="flex flex-col md:flex-row justify-between items-center gap-4 w-full">
+                <!-- Título e Subtítulo -->
+                <div class="flex items-center gap-3 w-full md:w-auto">
+                    <i class="fas fa-book-bible text-2xl text-indigo-200"></i>
+                    <div>
+                        <h1 class="text-xl font-bold tracking-tight leading-none">Colossenses 1</h1>
+                        <span class="text-[10px] uppercase tracking-widest text-indigo-200">Nova Almeida Atualizada</span>
+                    </div>
+                </div>
+                
+                <!-- Navegação Separada: Preparação vs Treino -->
+                <div class="flex flex-col sm:flex-row gap-3 sm:gap-5 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                    
+                    <div class="flex flex-col gap-1 min-w-max">
+                        <span class="text-[10px] uppercase tracking-widest text-indigo-300 font-bold ml-1">Preparação</span>
+                        <div class="flex bg-indigo-800 p-1 rounded-lg">
+                            <button onclick="setMode('reading')" id="btn-reading" class="px-3 py-2 text-xs md:text-sm rounded-md opacity-70 hover:opacity-100 transition-all tab-active whitespace-nowrap">Leitura</button>
+                            <button onclick="setMode('gaps')" id="btn-gaps" class="px-3 py-2 text-xs md:text-sm rounded-md opacity-70 hover:opacity-100 transition-all whitespace-nowrap">Lacunas</button>
+                            <button onclick="setMode('initials')" id="btn-initials" class="px-3 py-2 text-xs md:text-sm rounded-md opacity-70 hover:opacity-100 transition-all whitespace-nowrap">Iniciais</button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-col gap-1 min-w-max">
+                        <span class="text-[10px] uppercase tracking-widest text-emerald-300 font-bold ml-1">Treino</span>
+                        <div class="flex bg-indigo-800 p-1 rounded-lg">
+                            <button onclick="setMode('type')" id="btn-type" class="px-3 py-2 text-xs md:text-sm rounded-md opacity-70 hover:opacity-100 transition-all whitespace-nowrap">Digitar</button>
+                            <button onclick="setMode('sorteio')" id="btn-sorteio" class="px-3 py-2 text-xs md:text-sm rounded-md opacity-70 hover:opacity-100 transition-all whitespace-nowrap">Sorteio</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <div class="mb-8 bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 min-h-[100px]">
+            <div>
+                <h2 id="mode-title" class="text-2xl font-bold text-indigo-900 mb-1">Modo Leitura</h2>
+                <p id="mode-desc" class="text-slate-600 italic text-sm">Leia o texto completo para se familiarizar com o contexto.</p>
+            </div>
+            <div id="progress-container" class="text-right w-full md:w-auto hidden transition-all">
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-end gap-2">
+                    Progresso <span id="progress-text" class="text-sm text-indigo-600 font-bold bg-indigo-50 px-2 py-0.5 rounded">0%</span>
+                </span>
+                <div class="w-32 h-2 bg-slate-100 rounded-full mt-2 overflow-hidden ml-auto">
+                    <div id="progress-bar" class="h-full bg-indigo-500 w-0 transition-all duration-500"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="verses-list" class="space-y-4"></div>
+
+        <footer class="mt-12 text-center text-slate-500 pb-12 pt-8">
+            <p class="text-sm">Texto bíblico atualizado conforme solicitado.</p>
+            <p class="text-xs mt-1 text-slate-400">&copy; Memorizador Colossenses</p>
+        </footer>
+    </main>
+
+    <!-- Modal de Digitação -->
+    <div id="check-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[60]">
+        <div class="bg-white w-full max-w-xl rounded-2xl p-6 shadow-2xl overflow-hidden relative max-h-[90vh] overflow-y-auto">
+            <div class="absolute top-0 left-0 w-full h-1 bg-indigo-600"></div>
+            <h3 id="check-verse-num" class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2"></h3>
+            <textarea id="check-input" rows="5" class="w-full p-4 bg-slate-50 border-2 border-slate-200 rounded-xl mb-4 focus:border-indigo-500 focus:bg-white outline-none transition-all text-lg" placeholder="Escreva o versículo de memória..." onkeydown="handleEnter(event)"></textarea>
+            
+            <div id="check-feedback" class="hidden mb-4 p-4 rounded-xl text-sm font-medium"></div>
+            
+            <div class="flex gap-3 mt-2">
+                <button onclick="verifyText()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl font-bold transition-all">Verificar</button>
+                <button id="btn-show-solution" type="button" onclick="openSolutionModal()" class="hidden bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 rounded-xl font-bold transition-all cursor-pointer">Ver Gabarito</button>
+                <button onclick="closeCheck()" class="bg-slate-100 hover:bg-slate-200 text-slate-600 px-6 rounded-xl font-bold transition-all">Sair</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal do Gabarito -->
+    <div id="solution-modal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-[70]">
+        <div class="bg-white w-full max-w-lg rounded-2xl p-6 shadow-2xl relative">
+            <button onclick="closeSolutionModal()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 transition-colors">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+            <h3 class="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
+                <i class="fas fa-lightbulb text-amber-500"></i> Gabarito
+            </h3>
+            <div id="solution-modal-text" class="p-4 rounded-xl text-lg bg-amber-50 text-amber-900 border border-amber-200 leading-relaxed">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const colossians1 = [
+            { v: 1, text: "Paulo, apóstolo de Cristo Jesus, pela vontade de Deus, e o irmão Timóteo," },
+            { v: 2, text: "aos santos e fiéis irmãos em Cristo que estão em Colossos. Que a graça e a paz de Deus, nosso Pai, estejam com vocês." },
+            { v: 3, text: "Damos sempre graças a Deus, Pai de nosso Senhor Jesus Cristo, quando oramos por vocês," },
+            { v: 4, text: "desde que ouvimos da fé que vocês têm em Cristo Jesus e do amor que vocês têm por todos os santos," },
+            { v: 5, text: "por causa da esperança que está guardada para vocês nos céus. Desta esperança vocês ouviram falar anteriormente por meio da palavra da verdade do evangelho," },
+            { v: 6, text: "que chegou até vocês. Esse evangelho está produzindo fruto e crescendo em todo o mundo, assim como acontece entre vocês, desde o dia em que ouviram e entenderam a graça de Deus na verdade." },
+            { v: 7, text: "Isso vocês aprenderam de Epafras, nosso amado conservo e, em relação a vocês, fiel ministro de Cristo," },
+            { v: 8, text: "o qual também nos contou do amor que vocês têm no Espírito." },
+            { v: 9, text: "Por esta razão, também nós, desde o dia em que soubemos disso, não deixamos de orar por vocês e de pedir que transbordem do pleno conhecimento da vontade de Deus, em toda a sabedoria e entendimento espiritual." },
+            { v: 10, text: "Dessa maneira, poderão viver de modo digno do Senhor, para o seu inteiro agrado, frutificando em toda boa obra e crescendo no conhecimento de Deus." },
+            { v: 11, text: "Assim, vocês serão fortalecidos com todo o poder, segundo a força da sua glória, em toda a perseverança e paciência, com alegria," },
+            { v: 12, text: "dando graças ao Pai, que os capacitou a participar da herança dos santos na luz." },
+            { v: 13, text: "Ele nos libertou do poder das trevas e nos transportou para o Reino do seu Filho amado," },
+            { v: 14, text: "em quem temos a redenção, a remissão dos pecados." },
+            { v: 15, text: "Ele é a imagem do Deus invisível, o primogênito de toda a criação." },
+            { v: 16, text: "Pois nele foram criadas todas as coisas, nos céus e sobre a terra, as visíveis e as invisíveis, sejam tronos, sejam soberanias, quer principados, quer potestades. Tudo foi criado por meio dele e para ele." },
+            { v: 17, text: "Ele é antes de todas as coisas. Nele tudo subsiste." },
+            { v: 18, text: "Ele é a cabeça do corpo, que é a igreja. Ele é o princípio, o primogênito dentre os mortos, para ter a primazia em todas as coisas." },
+            { v: 19, text: "Porque Deus achou por bem que, nele, residisse toda a plenitude" },
+            { v: 20, text: "e que, havendo feito a paz pelo sangue da sua cruz, por meio dele, reconciliasse consigo mesmo todas as coisas, quer sobre a terra, quer nos céus." },
+            { v: 21, text: "E vocês que, no passado, eram estranhos e inimigos no entendimento pelas obras más que praticavam," },
+            { v: 22, text: "agora, porém, ele os reconciliou no corpo da sua carne, mediante a sua morte, para apresentá-los diante dele santos, inculpáveis e irrepreensíveis," },
+            { v: 23, text: "se é que vocês permanecem na fé, alicerçados e firmes, não se deixando afastar da esperança do evangelho que vocês ouviram e que foi pregado a toda criatura debaixo do céu, e do qual eu, Paulo, me tornei ministro." },
+            { v: 24, text: "Agora me alegro nos meus sofrimentos por vocês e preencho o que resta das aflições de Cristo, na minha carne, a favor do seu corpo, que é a igreja," },
+            { v: 25, text: "da qual me tornei ministro de acordo com a dispensação da parte de Deus, que me foi confiada em favor de vocês, para dar pleno cumprimento à palavra de Deus:" },
+            { v: 26, text: "o mistério que esteve escondido durante séculos e gerações, mas que agora foi manifestado aos seus santos." },
+            { v: 27, text: "A estes Deus quis dar a conhecer a riqueza da glória deste mistério entre os gentios, que é Cristo em vocês, a esperança da glória." },
+            { v: 28, text: "Este Cristo nós anunciamos, advertindo a todos e ensinando a cada um em toda a sabedoria, a fim de que apresentemos cada pessoa perfeita em Cristo." },
+            { v: 29, text: "É para esse fim que eu me empenho, esforçando-me o mais possível, segundo o poder de Cristo que opera poderosamente em mim." }
+        ];
+
+        let currentMode = 'reading';
+        let activeVerseIndex = null;
+        
+        // Progressos e Rascunhos Separados
+        let masteredType = new Set();
+        let userInputsType = {};
+        let userInputsSorteio = {};
+        
+        // Controle da aba Sorteio
+        let shuffledVerseIndices = [];
+        let currentSorteioIndex = 0;
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.querySelectorAll('header button').forEach(btn => btn.classList.remove('tab-active'));
+            document.getElementById(`btn-${mode}`).classList.add('tab-active');
+            
+            const titles = {
+                reading: { t: "Modo Leitura", d: "Leia o texto completo para se familiarizar com o contexto." },
+                gaps: { t: "Modo Lacunas", d: "As palavras-chave foram ocultadas. Passe o cursor ou toque para ver." },
+                initials: { t: "Modo Iniciais", d: "Apenas as primeiras letras. Ideal para recitação em voz alta." },
+                type: { t: "Modo Digitar", d: "Escreva o versículo para testar a sua memória." },
+                sorteio: { t: "Modo Sorteio", d: "Versículos em ordem aleatória. Escreva um de cada vez até completar o capítulo!" }
+            };
+
+            document.getElementById('mode-title').innerText = titles[mode].t;
+            document.getElementById('mode-desc').innerText = titles[mode].d;
+            
+            // Inicializa a ordem do sorteio se estiver vazia ou se já tiver concluído o anterior
+            if (mode === 'sorteio') {
+                if (shuffledVerseIndices.length === 0 || currentSorteioIndex >= colossians1.length) {
+                    shuffledVerseIndices = colossians1.map((_, i) => i);
+                    for (let i = shuffledVerseIndices.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [shuffledVerseIndices[i], shuffledVerseIndices[j]] = [shuffledVerseIndices[j], shuffledVerseIndices[i]];
+                    }
+                    currentSorteioIndex = 0;
+                }
+            }
+
+            updateProgressBar(); // Vai mostrar ou ocultar a barra dependendo da aba
+            renderVerses();
+        }
+
+        function renderVerses() {
+            const list = document.getElementById('verses-list');
+            list.innerHTML = '';
+            
+            if (currentMode === 'sorteio' && currentSorteioIndex >= colossians1.length) {
+                list.innerHTML = `
+                    <div class="p-8 text-center bg-green-50 rounded-2xl border border-green-200 shadow-sm">
+                        <i class="fas fa-trophy text-5xl text-green-500 mb-4"></i>
+                        <h3 class="text-2xl font-bold text-green-700 mb-2">Sorteio Concluído!</h3>
+                        <p class="text-green-600">Você digitou todos os versículos do capítulo com sucesso e em ordem aleatória.</p>
+                        <button onclick="shuffledVerseIndices=[]; setMode('sorteio');" class="mt-6 bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-md">Iniciar Novo Sorteio</button>
+                    </div>`;
+                return;
+            }
+
+            if (currentMode === 'sorteio') {
+                let trackerHtml = `<div class="flex flex-wrap gap-2 mb-6 justify-center p-5 bg-white rounded-2xl border border-slate-200 shadow-sm w-full">`;
+                colossians1.forEach((item, idx) => {
+                    const isCompleted = shuffledVerseIndices.indexOf(idx) < currentSorteioIndex;
+                    const styleClass = isCompleted ? 'bg-green-500 text-white shadow-md scale-110' : 'bg-slate-100 text-slate-300';
+                    trackerHtml += `<div class="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all duration-500 ${styleClass}" title="Versículo ${item.v}">${item.v}</div>`;
+                });
+                trackerHtml += `</div>`;
+                list.innerHTML += trackerHtml;
+            }
+
+            const itemsToRender = currentMode === 'sorteio' 
+                ? [{ item: colossians1[shuffledVerseIndices[currentSorteioIndex]], index: shuffledVerseIndices[currentSorteioIndex] }]
+                : colossians1.map((item, index) => ({ item, index }));
+
+            const displayMode = currentMode === 'sorteio' ? 'type' : currentMode;
+            const currentInputs = currentMode === 'sorteio' ? userInputsSorteio : userInputsType;
+
+            itemsToRender.forEach(({item, index}) => {
+                let processedText = item.text;
+                const isMastered = currentMode === 'type' ? masteredType.has(index) : false; // Sorteio apenas desenha o que ainda NÃO foi dominado na rodada
+
+                if (displayMode === 'gaps') {
+                    processedText = item.text.replace(/\b(\w{5,})\b/g, (match) => {
+                        return `<span class="border-b-2 border-indigo-200 px-1 text-transparent select-none hover:text-indigo-600 hover:border-indigo-500 cursor-help transition-all duration-300">${match}</span>`;
+                    });
+                } else if (displayMode === 'initials') {
+                    processedText = item.text.split(' ').map(word => {
+                        const firstChar = word.match(/[a-zA-Záàâãéèêíïóôõöúç]/i);
+                        if (!firstChar) return word;
+                        const rest = word.replace(/[a-zA-Záàâãéèêíïóôõöúç]/i, '');
+                        return `<span class="initials-font text-indigo-700">${firstChar[0]}</span><span class="opacity-10 text-[10px]">${rest}</span>`;
+                    }).join(' ');
+                } else if (displayMode === 'type') {
+                    if (isMastered) {
+                        processedText = `<span class="text-slate-700">${item.text}</span>`;
+                    } else if (currentInputs[index]) {
+                        processedText = `<span class="text-slate-500 italic">"${currentInputs[index]}"</span>`;
+                    } else {
+                        processedText = `<span class="text-slate-300 italic text-sm">Clique aqui para testar este versículo...</span>`;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `verse-card bg-white p-5 rounded-2xl border-2 transition-all ${isMastered ? 'border-green-200 bg-green-50/30' : 'border-white shadow-sm hover:border-indigo-100'} flex gap-4`;
+                
+                let actionBtn = '';
+                let textContainerClass = "flex-grow text-lg leading-relaxed text-slate-700";
+                let textContainerClick = "";
+
+                if (displayMode === 'type') {
+                    actionBtn = `<button onclick="openCheck(${index})" class="w-10 h-10 rounded-full flex items-center justify-center ${isMastered ? 'bg-green-500 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-600 hover:text-white'} transition-all"><i class="fas ${isMastered ? 'fa-check' : 'fa-pen'}"></i></button>`;
+                    textContainerClass += " cursor-pointer hover:bg-slate-50 rounded p-1 -m-1 transition-colors";
+                    textContainerClick = `onclick="openCheck(${index})"`;
+                }
+
+                card.innerHTML = `<div class="flex-none flex flex-col items-center"><span class="text-indigo-300 font-bold text-xs pt-1">${item.v}</span></div><div class="${textContainerClass}" ${textContainerClick}>${processedText}</div><div class="flex-none">${actionBtn}</div>`;
+                list.appendChild(card);
+            });
+        }
+
+        function openCheck(index) {
+            activeVerseIndex = index;
+            const currentInputs = currentMode === 'sorteio' ? userInputsSorteio : userInputsType;
+            
+            document.getElementById('check-verse-num').innerHTML = `<i class="fas fa-pen-nib text-indigo-500"></i> Versículo ${colossians1[index].v}`;
+            document.getElementById('check-input').value = currentInputs[index] || '';
+            document.getElementById('check-feedback').className = 'hidden mb-4 p-4 rounded-xl text-sm font-medium';
+            
+            document.getElementById('btn-show-solution').classList.add('hidden');
+
+            document.getElementById('check-modal').classList.remove('hidden');
+            setTimeout(() => document.getElementById('check-input').focus(), 100);
+        }
+
+        function closeCheck() { 
+            if (activeVerseIndex !== null) {
+                const currentInputs = currentMode === 'sorteio' ? userInputsSorteio : userInputsType;
+                currentInputs[activeVerseIndex] = document.getElementById('check-input').value.trim();
+                renderVerses();
+            }
+            document.getElementById('check-modal').classList.add('hidden'); 
+        }
+
+        function openSolutionModal() {
+            const solText = document.getElementById('solution-modal-text');
+            solText.innerText = colossians1[activeVerseIndex].text;
+            document.getElementById('solution-modal').classList.remove('hidden');
+        }
+
+        function closeSolutionModal() {
+            document.getElementById('solution-modal').classList.add('hidden');
+            document.getElementById('check-input').focus();
+        }
+
+        function handleEnter(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); 
+                if (document.getElementById('solution-modal').classList.contains('hidden')) {
+                    verifyText();
+                }
+            }
+        }
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                const solutionModal = document.getElementById('solution-modal');
+                const checkModal = document.getElementById('check-modal');
+                
+                if (!solutionModal.classList.contains('hidden')) {
+                    closeSolutionModal();
+                } else if (!checkModal.classList.contains('hidden')) {
+                    closeCheck();
+                }
+            }
+        });
+
+        // Função de análise Palavra por Palavra - Prioridade Linear Absoluta (Esquerda para Direita)
+        function getVisualDiff(original, typed) {
+            const oStr = original.replace(/\s+/g, " ").trim();
+            const tStr = typed.replace(/\s+/g, " ").trim();
+
+            const tokenize = (str) => {
+                // Captura palavras, números e pontuação individualmente
+                const matches = str.matchAll(/[\p{L}\p{N}]+|[^\p{L}\p{N}\s]+|\s+/gu);
+                return Array.from(matches).map(m => m[0]);
+            };
+
+            const oToksOriginal = tokenize(oStr);
+            const tToksOriginal = tokenize(tStr);
+
+            // INVERSÃO: Inverter os arrays obriga o "backtracking" (que ocorre do fim para o início)
+            // a priorizar o casamento de palavras do INÍCIO da frase real.
+            const oToks = [...oToksOriginal].reverse();
+            const tToks = [...tToksOriginal].reverse();
+
+            // Custos em números inteiros evitam bugs de arredondamento (como 0.100000001)
+            const costDel = 1;
+            const costIns = 20;
+            const costSub = 15;
+
+            // Matriz de Programação Dinâmica
+            const dp = Array(oToks.length + 1).fill(null).map(() => Array(tToks.length + 1).fill(0));
+            
+            for (let i = 0; i <= oToks.length; i++) dp[i][0] = i * costDel; 
+            for (let j = 0; j <= tToks.length; j++) dp[0][j] = j * costIns;   
+
+            for (let i = 1; i <= oToks.length; i++) {
+                for (let j = 1; j <= tToks.length; j++) {
+                    if (oToks[i-1].toLowerCase() === tToks[j-1].toLowerCase()) {
+                        dp[i][j] = dp[i-1][j-1]; 
+                    } else {
+                        dp[i][j] = Math.min(
+                            dp[i-1][j] + costDel,  // Deletar da original (mais barato, encoraja seguir a fila)
+                            dp[i][j-1] + costIns,    // Inserir nova (caro)
+                            dp[i-1][j-1] + costSub // Substituir (médio)
+                        );
+                    }
+                }
+            }
+
+            let i = oToks.length;
+            let j = tToks.length;
+            const rawEdits = [];
+            
+            // Reconstrói o caminho (já sai na ordem cronológica correta da esquerda para a direita)
+            while (i > 0 || j > 0) {
+                if (i > 0 && j > 0 && oToks[i-1].toLowerCase() === tToks[j-1].toLowerCase()) {
+                    rawEdits.push({ type: 'match', o: oToks[i-1], t: tToks[j-1] });
+                    i--; j--;
+                } else if (i > 0 && (j === 0 || dp[i][j] === dp[i-1][j] + costDel)) {
+                    // Marca como palavra faltante (deleção) na posição atual
+                    rawEdits.push({ type: 'del', o: oToks[i-1] });
+                    i--;
+                } else if (j > 0 && (i === 0 || dp[i][j] === dp[i][j-1] + costIns)) {
+                    rawEdits.push({ type: 'ins', t: tToks[j-1] });
+                    j--;
+                } else {
+                    rawEdits.push({ type: 'sub', o: oToks[i-1], t: tToks[j-1] });
+                    i--; j--;
+                }
+            }
+
+            // Renderização visual
+            const isPunctuation = (char) => char && /[.,\/#!$%\^&\*;:{}=\-_`~()?]/.test(char);
+
+            function diffChars(oWord, tWord) {
+                let html = '';
+                const maxLength = Math.max(oWord.length, tWord.length);
+                for (let c = 0; c < maxLength; c++) {
+                    const charO = oWord[c];
+                    const charT = tWord[c];
+                    if (charO !== undefined && charT !== undefined) {
+                        if (charO === charT) {
+                            html += `<span class="text-slate-700">${charT}</span>`;
+                        } else {
+                            let charToShow = charT === ' ' ? '_' : (isPunctuation(charO) || isPunctuation(charT) ? '*' : charT);
+                            html += `<span class="error-char">${charToShow}</span>`;
+                        }
+                    } else if (charO !== undefined) {
+                        let charToShow = charO === ' ' ? '_' : (isPunctuation(charO) ? '*' : '-');
+                        html += `<span class="error-char">${charToShow}</span>`;
+                    } else if (charT !== undefined) {
+                        let charToShow = charT === ' ' ? '_' : (isPunctuation(charT) ? '*' : charT);
+                        html += `<span class="error-char">${charToShow}</span>`;
+                    }
+                }
+                return html;
+            }
+
+            let resultHtml = '';
+            for (const edit of rawEdits) {
+                if (edit.type === 'match') {
+                    resultHtml += `<span class="text-slate-700">${edit.t}</span>`;
+                } else if (edit.type === 'sub') {
+                    resultHtml += diffChars(edit.o, edit.t);
+                } else if (edit.type === 'del') {
+                    resultHtml += edit.o.split('').map(c => {
+                        let charToShow = c === ' ' ? '_' : (isPunctuation(c) ? '*' : '-');
+                        return `<span class="error-char">${charToShow}</span>`;
+                    }).join('');
+                } else if (edit.type === 'ins') {
+                    resultHtml += edit.t.split('').map(c => {
+                        let charToShow = c === ' ' ? '_' : (isPunctuation(c) ? '*' : c);
+                        return `<span class="error-char">${charToShow}</span>`;
+                    }).join('');
+                }
+            }
+            return resultHtml;
+        }
+
+        function verifyText() {
+            const userInput = document.getElementById('check-input').value.trim();
+            const currentInputs = currentMode === 'sorteio' ? userInputsSorteio : userInputsType;
+            currentInputs[activeVerseIndex] = userInput;
+
+            const original = colossians1[activeVerseIndex].text;
+            const feedback = document.getElementById('check-feedback');
+            const btnSol = document.getElementById('btn-show-solution');
+            
+            const simplify = (str) => str.replace(/\s+/g, " ").trim();
+            
+            feedback.classList.remove('hidden');
+            btnSol.classList.add('hidden');
+            
+            if (simplify(userInput) === simplify(original)) {
+                feedback.innerHTML = `<i class="fas fa-check-circle mr-2"></i> Perfeito!`;
+                feedback.className = "mb-4 p-4 rounded-xl text-sm font-medium bg-green-100 text-green-700 border border-green-200";
+                
+                // Salva o progresso apenas na aba específica em que se encontra
+                if (currentMode === 'type') {
+                    masteredType.add(activeVerseIndex);
+                }
+                
+                renderVerses();
+                updateProgressBar(); // Atualiza a barra assim que o progresso muda
+                
+                setTimeout(() => { 
+                    if (currentMode === 'sorteio') {
+                        currentSorteioIndex++;
+                        updateProgressBar(); // Atualiza a barra de sorteio novamente
+                        
+                        if (currentSorteioIndex < colossians1.length) {
+                            renderVerses();
+                            openCheck(shuffledVerseIndices[currentSorteioIndex]);
+                        } else {
+                            closeCheck(); 
+                            renderVerses(); 
+                        }
+                    } else {
+                        const nextIndex = activeVerseIndex + 1;
+                        if (nextIndex < colossians1.length) {
+                            openCheck(nextIndex);
+                        } else {
+                            closeCheck(); 
+                        }
+                    }
+                }, 1200);
+            } else {
+                renderVerses(); 
+                
+                const visualDiff = getVisualDiff(original, userInput);
+                
+                feedback.innerHTML = `
+                    <div class="flex items-center mb-2 font-bold text-red-700">
+                        <i class="fas fa-search mr-2"></i> Análise de erros:
+                    </div>
+                    <div class="bg-white/70 p-3 rounded-lg border border-red-200 font-mono text-[17px] tracking-wide leading-relaxed break-words whitespace-pre-wrap">${visualDiff}</div>
+                `;
+                feedback.className = "mb-4 p-4 rounded-xl text-sm bg-red-50 text-slate-800 border border-red-200 shadow-inner";
+                
+                btnSol.classList.remove('hidden');
+            }
+        }
+
+        function updateProgressBar() {
+            const bar = document.getElementById('progress-bar');
+            const text = document.getElementById('progress-text');
+            const container = document.getElementById('progress-container');
+            
+            // Oculta completamente a barra nos modos de Preparação
+            if (['reading', 'gaps', 'initials'].includes(currentMode)) {
+                container.classList.add('hidden');
+                return;
+            } else {
+                container.classList.remove('hidden');
+            }
+            
+            let percentage = 0;
+            if (currentMode === 'sorteio') {
+                percentage = (currentSorteioIndex / colossians1.length) * 100;
+            } else {
+                percentage = (masteredType.size / colossians1.length) * 100;
+            }
+            
+            bar.style.width = `${percentage}%`;
+            if (text) text.innerText = `${Math.round(percentage)}%`;
+        }
+
+        window.onload = () => renderVerses();
+    </script>
+</body>
+</html>
